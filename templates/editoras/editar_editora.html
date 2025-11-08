@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Editora</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Editar Editora</h1>
+        
+        <form method="POST" action="{{ url_for('editar_editora', id=editora.ID_editora) }}">
+            <div class="form-group">
+                <label for="nome_editora">Nome da Editora:</label>
+                <input type="text" id="nome_editora" name="nome_editora" value="{{ editora.Nome_editora }}" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="endereco_editora">Endereço:</label>
+                <textarea id="endereco_editora" name="endereco_editora" rows="4">{{ editora.Endereco_editora }}</textarea>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Atualizar Editora</button>
+                <a href="{{ url_for('listar_editoras') }}" class="btn btn-secondary">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</body>
+</html>
