@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Livros</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Livros Cadastrados</h1>
+        
+        <div class="actions">
+            <a href="{{ url_for('novo_livro') }}" class="btn btn-primary">Novo Livro</a>
+        </div>
+        
+        {% if livros %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Título</th>
+                    <th>Autor</th>
+                    <th>ISBN</th>
+                    <th>Ano</th>
+                    <th>Gênero</th>
+                    <th>Editora</th>
+                    <th>Quantidade</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for livro in livros %}
+                <tr>
+                    <td>{{ livro.ID_livro }}</td>
+                    <td>{{ livro.Titulo }}</td>
+                    <td>{{ livro.autor.Nome_autor }}</td>
+                    <td>{{ livro.ISBN }}</td>
+                    <td>{{ livro.Ano_publicacao or '-' }}</td>
+                    <td>{{ livro.genero.Nome_genero }}</td>
+                    <td>{{ livro.editora.Nome_editora }}</td>
+                    <td>{{ livro.Quantidade_disponivel }}</td>
+                    <td class="actions">
+                        <a href="{{ url_for('editar_livro', id=livro.ID_livro) }}" class="btn btn-edit">Editar</a>
+                        <form method="POST" action="{{ url_for('excluir_livro', id=livro.ID_livro) }}" style="display: inline;">
+                            <button type="submit" class="btn btn-delete" onclick="return confirm('Tem certeza que deseja excluir este livro?')">Excluir</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="no-data">Nenhum livro cadastrado.</p>
+        {% endif %}
+        
+        <a href="{{ url_for('index') }}" class="btn btn-secondary">Voltar ao Início</a>
+    </div>
+</body>
+</html>
