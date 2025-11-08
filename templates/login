@@ -1,1 +1,35 @@
 
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Biblioteca</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container" style="max-width: 400px; margin-top: 100px;">
+        <h1>Login</h1>
+        <p class="subtitle">Acesse o sistema da biblioteca</p>
+
+        {% if mensagem %}
+            <div class="alert alert-error">{{ mensagem }}</div>
+        {% endif %}
+
+        <form action="{{ url_for('login') }}" method="POST" class="form">
+            <label for="usuario">Usuário:</label>
+            <input type="text" id="usuario" name="usuario" placeholder="Digite seu usuário" required>
+
+            <label for="senha">Senha:</label>
+            <input type="password" id="senha" name="senha" placeholder="Digite sua senha" required>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Entrar</button>
+                <a href="{{ url_for('index') }}" class="btn btn-secondary">Voltar</a>
+            </div>
+        </form>
+
+        <p class="footer-text">Ainda não tem uma conta? <a href="{{ url_for('novo_usuario') }}">Cadastre-se</a></p>
+    </div>
+</body>
+</html>
