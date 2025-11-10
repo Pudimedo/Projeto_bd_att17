@@ -21,7 +21,7 @@ def initDatabase():
             command = command.strip()  # Remove espaços extras
             if command:  # Ignora comandos vazios
                 cursor.execute(command)
-        print("Banco de dados e tabelas criados com sucesso!")
+        print("Banco de dados criados")
     except mysql.connector.Error as err:
         print(f"Erro ao executar o script: {err}")
     finally:

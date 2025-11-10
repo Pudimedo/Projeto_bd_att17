@@ -1,27 +1,24 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Editar Autor</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
-    <div class="container">
-        <h1>Editar Autor</h1>
-        
-        <form action="{{ url_for('atualizar_autor', id=autor.ID_autor) }}" method="POST" class="form">
-            <label for="nome">Nome do Autor:</label>
-            <input type="text" id="nome" name="nome" value="{{ autor.Nome_autor }}" required>
-
-            <label for="nacionalidade">Nacionalidade:</label>
-            <input type="text" id="nacionalidade" name="nacionalidade" value="{{ autor.Nacionalidade or '' }}">
-
-            <div class="form-actions">
-                <button type="submit" class="btn btn-primary">Salvar Alterações</button>
-                <a href="{{ url_for('listar_autores') }}" class="btn btn-secondary">Cancelar</a>
-            </div>
-        </form>
-    </div>
-</body>
-</html>
+{% extends "base.html" %}
+{% block title %}Editar Autor{% endblock %}
+{% block content %}
+<h2>Editar Autor</h2>
+<form method="post">
+  <div class="mb-3">
+    <label class="form-label">Nome</label>
+    <input type="text" name="nome" class="form-control" value="{{ autor.Nome_autor }}" required>
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Nacionalidade</label>
+    <input type="text" name="nacionalidade" class="form-control" value="{{ autor.Nacionalidade }}">
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Data de Nascimento</label>
+    <input type="date" name="data_nascimento" class="form-control" value="{{ autor.Data_nascimento }}">
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Biografia</label>
+    <textarea name="biografia" class="form-control">{{ autor.Biografia }}</textarea>
+  </div>
+  <button type="submit" class="btn btn-primary">Atualizar</button>
+</form>
+{% endblock %}

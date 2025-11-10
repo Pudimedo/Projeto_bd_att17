@@ -1,31 +1,21 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nova Editora</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
-    <div class="container">
-        <h1>Cadastrar Nova Editora</h1>
-        
-        <form method="POST" action="{{ url_for('nova_editora') }}">
-            <div class="form-group">
-                <label for="nome_editora">Nome da Editora:</label>
-                <input type="text" id="nome_editora" name="nome_editora" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="endereco_editora">Endereço:</label>
-                <textarea id="endereco_editora" name="endereco_editora" rows="4"></textarea>
-            </div>
-            
-            <div class="form-actions">
-                <button type="submit" class="btn btn-primary">Salvar Editora</button>
-                <a href="{{ url_for('listar_editoras') }}" class="btn btn-secondary">Cancelar</a>
-            </div>
-        </form>
-    </div>
-</body>
-</html>
+{% extends "base.html" %}
+{% block title %}Nova Editora{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Nova Editora</h2>
+
+<form method="post">
+  <div class="mb-3">
+    <label for="nome" class="form-label">Nome da Editora</label>
+    <input type="text" id="nome" name="nome" class="form-control" required>
+  </div>
+
+  <div class="mb-3">
+    <label for="endereco" class="form-label">Endereço</label>
+    <textarea id="endereco" name="endereco" class="form-control" rows="3"></textarea>
+  </div>
+
+  <button type="submit" class="btn btn-primary">Salvar</button>
+  <a href="{{ url_for('listar_editoras') }}" class="btn btn-secondary">Cancelar</a>
+</form>
+{% endblock %}

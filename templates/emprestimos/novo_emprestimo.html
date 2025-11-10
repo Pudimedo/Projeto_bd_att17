@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Novo Empréstimo{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Novo Empréstimo</h2>
+
+<form method="post">
+  <div class="mb-3">
+    <label class="form-label">Usuário</label>
+    <select name="usuario_id" class="form-select" required>
+      <option value="">Selecione um usuário</option>
+      {% for usuario in usuarios %}
+      <option value="{{ usuario.ID_usuario }}">{{ usuario.Nome_usuario }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">Livro</label>
+    <select name="livro_id" class="form-select" required>
+      <option value="">Selecione um livro</option>
+      {% for livro in livros %}
+      <option value="{{ livro.ID_livro }}">{{ livro.Titulo }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">Data de Empréstimo</label>
+    <input type="date" name="data_emprestimo" class="form-control" required>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">Data de Devolução Prevista</label>
+    <input type="date" name="data_devolucao_prevista" class="form-control" required>
+  </div>
+
+  <button type="submit" class="btn btn-primary">Salvar</button>
+  <a href="{{ url_for('listar_emprestimos') }}" class="btn btn-secondary">Cancelar</a>
+</form>
+{% endblock %}

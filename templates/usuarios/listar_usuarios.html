@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Usuários{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Lista de Usuários</h2>
+
+<a href="{{ url_for('novo_usuario') }}" class="btn btn-success mb-3">
+  Novo Usuário
+</a>
+
+<table class="table table-hover align-middle">
+  <thead class="table-primary">
+    <tr>
+      <th>ID</th>
+      <th>Nome</th>
+      <th>Email</th>
+      <th>Telefone</th>
+      <th>Data de Inscrição</th>
+      <th>Multa Atual</th>
+      <th>Ações</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for usuario in usuarios %}
+    <tr>
+      <td>{{ usuario.ID_usuario }}</td>
+      <td>{{ usuario.Nome_usuario }}</td>
+      <td>{{ usuario.Email or '-' }}</td>
+      <td>{{ usuario.Numero_telefone or '-' }}</td>
+      <td>{{ usuario.Data_inscricao or '-' }}</td>
+      <td>
+        {% if usuario.Multa_atual %}
+          R$ {{ "%.2f"|format(usuario.Multa_atual) }}
+        {% else %}
+          —
+        {% endif %}
+      </td>
+      <td>
+        <a href="{{ url_for('editar_usuario', id=usuario.ID_usuario) }}" class="btn btn-sm btn-warning">
+          Editar
+        </a>
+      </td>
+      <td>
+        <a href="{{ url_for('excluir_usuario', id=usuario.ID_usuario) }}" class="btn btn-danger btn-sm">
+    🗑️ Excluir
+</a>
+      </td>
+    </tr>
+    {% else %}
+    <tr>
+      <td colspan="7" class="text-center text-muted">Nenhum usuário cadastrado.</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

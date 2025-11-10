@@ -1,50 +1,38 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lista de Autores</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
-    <div class="container">
-        <h1>Autores Cadastrados</h1>
-        
-        <div class="actions">
-            <a href="{{ url_for('novo_autor') }}" class="btn btn-primary">Novo Autor</a>
-        </div>
-        
-        {% if autores %}
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Nome</th>
-                    <th>Nacionalidade</th>
-                    <th>Ações</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for autor in autores %}
-                <tr>
-                    <td>{{ autor.ID_autor }}</td>
-                    <td>{{ autor.Nome_autor }}</td>
-                    <td>{{ autor.Nacionalidade or '-' }}</td>
-                    <td class="actions">
-                        <a href="{{ url_for('editar_autor', id=autor.ID_autor) }}" class="btn btn-edit">Editar</a>
-                        <form method="POST" action="{{ url_for('excluir_autor', id=autor.ID_autor) }}" style="display: inline;">
-                            <button type="submit" class="btn btn-delete" onclick="return confirm('Tem certeza que deseja excluir este autor?')">Excluir</button>
-                        </form>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        {% else %}
-        <p class="no-data">Nenhum autor cadastrado.</p>
-        {% endif %}
-        
-        <a href="{{ url_for('index') }}" class="btn btn-secondary">Voltar ao Início</a>
-    </div>
-</body>
-</html>
+{% extends "base.html" %}
+{% block title %}Autores{% endblock %}
+{% block content %}
+<h2>Lista de Autores</h2>
+<a href="{{ url_for('novo_autor') }}" class="btn btn-success mb-3">Novo Autor</a>
+<table class="table table-striped">
+  <thead class="table-primary">
+    <tr>
+      <th>ID</th>
+      <th>Nome</th>
+      <th>Nacionalidade</th>
+      <th>Data de Nascimento</th>
+      <th>Ações</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for autor in autores %}
+    <tr>
+        <td class="text-center">
+  <a href="{{ url_for('editar_autor', id=autor.ID_autor) }}" class="btn btn-sm btn-warning">Editar</a>
+  <form action="{{ url_for('excluir_autor', id=autor.ID_autor) }}" method="post" class="d-inline">
+    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Tem certeza que deseja excluir este autor?')">
+      Excluir
+    </button>
+  </form>
+</td>
+      <td>{{ autor.ID_autor }}</td>
+      <td>{{ autor.Nome_autor }}</td>
+      <td>{{ autor.Nacionalidade }}</td>
+      <td>{{ autor.Data_nascimento }}</td>
+      <td>
+        <a href="{{ url_for('editar_autor', id=autor.ID_autor) }}" class="btn btn-sm btn-warning">Editar</a>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

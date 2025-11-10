@@ -1,50 +1,48 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lista de Editoras</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
-    <div class="container">
-        <h1>Editoras Cadastradas</h1>
-        
-        <div class="actions">
-            <a href="{{ url_for('nova_editora') }}" class="btn btn-primary">Nova Editora</a>
-        </div>
-        
-        {% if editoras %}
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Nome</th>
-                    <th>Endereço</th>
-                    <th>Ações</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for editora in editoras %}
-                <tr>
-                    <td>{{ editora.ID_editora }}</td>
-                    <td>{{ editora.Nome_editora }}</td>
-                    <td>{{ editora.Endereco_editora or '-' }}</td>
-                    <td class="actions">
-                        <a href="{{ url_for('editar_editora', id=editora.ID_editora) }}" class="btn btn-edit">Editar</a>
-                        <form method="POST" action="{{ url_for('excluir_editora', id=editora.ID_editora) }}" style="display: inline;">
-                            <button type="submit" class="btn btn-delete" onclick="return confirm('Tem certeza que deseja excluir esta editora?')">Excluir</button>
-                        </form>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        {% else %}
-        <p class="no-data">Nenhuma editora cadastrada.</p>
-        {% endif %}
-        
-        <a href="{{ url_for('index') }}" class="btn btn-secondary">Voltar ao Início</a>
-    </div>
-</body>
-</html>
+{% extends "base.html" %}
+{% block title %}Editoras{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Lista de Editoras</h2>
+
+<a href="{{ url_for('nova_editora') }}" class="btn btn-success mb-3">
+  Nova Editora
+</a>
+
+<table class="table table-hover align-middle">
+  <thead class="table-primary">
+    <tr>
+      <th>ID</th>
+      <th>Nome da Editora</th>
+      <th>Endereço</th>
+      <th>Ações</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for editora in editoras %}
+    <tr>
+        <td class="text-center">
+  <a href="{{ url_for('editar_editora', id=editora.ID_editora) }}" class="btn btn-sm btn-warning">Editar</a>
+  <form action="{{ url_for('excluir_editora', id=editora.ID_editora) }}" method="post" class="d-inline">
+    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Tem certeza que deseja excluir esta editora?')">
+      Excluir
+    </button>
+  </form>
+</td>
+
+      <td>{{ editora.ID_editora }}</td>
+      <td>{{ editora.Nome_editora }}</td>
+      <td>{{ editora.Endereco_editora }}</td>
+      <td>
+        <a href="{{ url_for('editar_editora', id=editora.ID_editora) }}" class="btn btn-sm btn-warning">
+          Editar
+        </a>
+      </td>
+    </tr>
+    {% else %}
+    <tr>
+      <td colspan="4" class="text-center text-muted">Nenhuma editora cadastrada.</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

@@ -1,27 +1,24 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Novo Autor</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
-    <div class="container">
-        <h1>Novo Autor</h1>
-        
-        <form action="{{ url_for('salvar_autor') }}" method="POST" class="form">
-            <label for="nome">Nome do Autor:</label>
-            <input type="text" id="nome" name="nome" required>
-
-            <label for="nacionalidade">Nacionalidade:</label>
-            <input type="text" id="nacionalidade" name="nacionalidade">
-
-            <div class="form-actions">
-                <button type="submit" class="btn btn-primary">Salvar</button>
-                <a href="{{ url_for('listar_autores') }}" class="btn btn-secondary">Cancelar</a>
-            </div>
-        </form>
-    </div>
-</body>
-</html>
+{% extends "base.html" %}
+{% block title %}Novo Autor{% endblock %}
+{% block content %}
+<h2>Novo Autor</h2>
+<form method="post">
+  <div class="mb-3">
+    <label class="form-label">Nome</label>
+    <input type="text" name="nome" class="form-control" required>
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Nacionalidade</label>
+    <input type="text" name="nacionalidade" class="form-control">
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Data de Nascimento</label>
+    <input type="date" name="data_nascimento" class="form-control">
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Biografia</label>
+    <textarea name="biografia" class="form-control"></textarea>
+  </div>
+  <button type="submit" class="btn btn-primary">Salvar</button>
+</form>
+{% endblock %}

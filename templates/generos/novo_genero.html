@@ -1,27 +1,23 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Novo Gênero</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
-    <div class="container">
-        <h1>Novo Gênero</h1>
-        
-        <form action="{{ url_for('salvar_genero') }}" method="POST" class="form">
-            <label for="nome">Nome do Gênero:</label>
-            <input type="text" id="nome" name="nome" required>
+{% extends "base.html" %}
+{% block title %}Novo Gênero{% endblock %}
 
-            <label for="descricao">Descrição:</label>
-            <textarea id="descricao" name="descricao" rows="3"></textarea>
+{% block content %}
+<h2 class="mb-4">Novo Gênero</h2>
 
-            <div class="form-actions">
-                <button type="submit" class="btn btn-primary">Salvar</button>
-                <a href="{{ url_for('listar_generos') }}" class="btn btn-secondary">Cancelar</a>
-            </div>
-        </form>
-    </div>
-</body>
-</html>
+<form method="post">
+  <div class="mb-3">
+    <label for="nome" class="form-label">Nome do Gênero</label>
+    <input
+      type="text"
+      id="nome"
+      name="nome"
+      class="form-control"
+      placeholder="Ex: Ficção, Romance, Biografia..."
+      required
+    >
+  </div>
+
+  <button type="submit" class="btn btn-primary">Salvar</button>
+  <a href="{{ url_for('listar_generos') }}" class="btn btn-secondary">Cancelar</a>
+</form>
+{% endblock %}

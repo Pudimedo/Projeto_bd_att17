@@ -1,50 +1,43 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lista de Gêneros</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
-    <div class="container">
-        <h1>Gêneros Cadastrados</h1>
-        
-        <div class="actions">
-            <a href="{{ url_for('novo_genero') }}" class="btn btn-primary">Novo Gênero</a>
-        </div>
-        
-        {% if generos %}
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Nome</th>
-                    <th>Descrição</th>
-                    <th>Ações</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for genero in generos %}
-                <tr>
-                    <td>{{ genero.ID_genero }}</td>
-                    <td>{{ genero.Nome_genero }}</td>
-                    <td>{{ genero.Descricao or '-' }}</td>
-                    <td class="actions">
-                        <a href="{{ url_for('editar_genero', id=genero.ID_genero) }}" class="btn btn-edit">Editar</a>
-                        <form method="POST" action="{{ url_for('excluir_genero', id=genero.ID_genero) }}" style="display: inline;">
-                            <button type="submit" class="btn btn-delete" onclick="return confirm('Tem certeza que deseja excluir este gênero?')">Excluir</button>
-                        </form>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        {% else %}
-        <p class="no-data">Nenhum gênero cadastrado.</p>
-        {% endif %}
-        
-        <a href="{{ url_for('index') }}" class="btn btn-secondary">Voltar ao Início</a>
+{% extends "base.html" %}
+{% block title %}Lista de Gêneros{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h2 class="text-center mb-4">🎭 Lista de Gêneros</h2>
+
+    <div class="text-end mb-3">
+        <a href="{{ url_for('novo_genero') }}" class="btn btn-success">Novo Gênero</a>
     </div>
-</body>
-</html>
+
+    <table class="table table-striped table-hover align-middle">
+        <thead class="table-primary text-center">
+            <tr>
+                <th>ID</th>
+                <th>Nome do Gênero</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for genero in generos %}
+            <tr>
+                <td>{{ genero.ID_genero }}</td>
+                <td>{{ genero.Nome_genero }}</td>
+                <td class="text-center">
+                    <a href="{{ url_for('editar_genero', id=genero.ID_genero) }}" class="btn btn-sm btn-warning">Editar</a>
+                    <form action="{{ url_for('excluir_genero', id=genero.ID_genero) }}" method="post" class="d-inline">
+                        <button type="submit" class="btn btn-sm btn-danger"
+                                onclick="return confirm('Tem certeza que deseja excluir este gênero?')">
+                            Excluir
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="3" class="text-center text-muted">Nenhum gênero cadastrado.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

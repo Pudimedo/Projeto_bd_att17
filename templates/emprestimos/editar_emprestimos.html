@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Editar Empréstimo{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Editar Empréstimo</h2>
+
+<form method="post">
+  <div class="mb-3">
+    <label class="form-label">Usuário</label>
+    <select name="usuario_id" class="form-select" required>
+      {% for usuario in usuarios %}
+      <option value="{{ usuario.ID_usuario }}" {% if usuario.ID_usuario == emprestimo.Usuario_id %}selected{% endif %}>
+        {{ usuario.Nome_usuario }}
+      </option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">Livro</label>
+    <select name="livro_id" class="form-select" required>
+      {% for livro in livros %}
+      <option value="{{ livro.ID_livro }}" {% if livro.ID_livro == emprestimo.Livro_id %}selected{% endif %}>
+        {{ livro.Titulo }}
+      </option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">Data de Empréstimo</label>
+    <input type="date" name="data_emprestimo" class="form-control" value="{{ emprestimo.Data_emprestimo }}">
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">Data de Devolução Prevista</label>
+    <input type="date" name="data_devolucao_prevista" class="form-control" value="{{ emprestimo.Data_devolucao_prevista }}">
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">Data de Devolução Real</label>
+    <input type="date" name="data_devolucao_real" class="form-control" value="{{ emprestimo.Data_devolucao_real }}">
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">Status</label>
+    <select name="status" class="form-select">
+      <option value="pendente" {% if emprestimo.Status_emprestimo == 'pendente' %}selected{% endif %}>Pendente</option>
+      <option value="devolvido" {% if emprestimo.Status_emprestimo == 'devolvido' %}selected{% endif %}>Devolvido</option>
+      <option value="atrasado" {% if emprestimo.Status_emprestimo == 'atrasado' %}selected{% endif %}>Atrasado</opt_
