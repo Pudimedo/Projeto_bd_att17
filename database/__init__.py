@@ -11,7 +11,7 @@ def initDatabase():
     cursor.execute("CREATE DATABASE IF NOT EXISTS db_atividade17;")
     cursor.execute("USE db_atividade17;")
 
-    with open('database/schema.sql', 'r') as schema_file:
+    with open('schema.sql', 'r') as schema_file:
         schema_sql = schema_file.read()
 
     commands = schema_sql.split(';')  # Divide o script em cada ;
