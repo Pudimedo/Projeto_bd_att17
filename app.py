@@ -1,7 +1,9 @@
-from flask import *
+from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import text
 
 app = Flask(__name__)
+app.secret_key = "123"
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://root:@localhost:3306/db_atividade17'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -9,387 +11,502 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
 
-class Autor(db.Model):
-    __tablename__ = 'Autores'
-    ID_autor = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    Nome_autor = db.Column(db.String(255), nullable=False)
-    Nacionalidade = db.Column(db.String(255))
-    Data_nascimento = db.Column(db.Date)
-    Biografia = db.Column(db.Text)
-
-class Genero(db.Model):
-    __tablename__ = 'Generos'
-    ID_genero = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    Nome_genero = db.Column(db.String(255), nullable=False)
-
-class Editora(db.Model):
-    __tablename__ = 'Editoras'
-    ID_editora = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    Nome_editora = db.Column(db.String(255), nullable=False)
-    Endereco_editora = db.Column(db.Text)
-
-class Livro(db.Model):
-    __tablename__ = 'Livros'
-    ID_livro = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    Titulo = db.Column(db.String(255), nullable=False)
-    Autor_id = db.Column(db.Integer, db.ForeignKey('Autores.ID_autor'))
-    ISBN = db.Column(db.String(13), nullable=False)
-    Ano_publicacao = db.Column(db.Integer)
-    Genero_id = db.Column(db.Integer, db.ForeignKey('Generos.ID_genero'))
-    Editora_id = db.Column(db.Integer, db.ForeignKey('Editoras.ID_editora'))
-    Quantidade_disponivel = db.Column(db.Integer)
-    Resumo = db.Column(db.Text)
-    autor = db.relationship('Autor', backref='livros')
-    genero = db.relationship('Genero', backref='livros')
-    editora = db.relationship('Editora', backref='livros')
-
-class Usuario(db.Model):
-    __tablename__ = 'Usuarios'
-    ID_usuario = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    Nome_usuario = db.Column(db.String(255), nullable=False)
-    Email = db.Column(db.String(255))
-    Numero_telefone = db.Column(db.String(15))
-    Data_inscricao = db.Column(db.Date)
-    Multa_atual = db.Column(db.Numeric(10, 2))
-
-class Emprestimo(db.Model):
-    __tablename__ = 'Emprestimos'
-    ID_emprestimo = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    Usuario_id = db.Column(db.Integer, db.ForeignKey('Usuarios.ID_usuario'))
-    Livro_id = db.Column(db.Integer, db.ForeignKey('Livros.ID_livro'))
-    Data_emprestimo = db.Column(db.Date)
-    Data_devolucao_prevista = db.Column(db.Date)
-    Data_devolucao_real = db.Column(db.Date)
-    Status_emprestimo = db.Column(db.Enum('pendente', 'devolvido', 'atrasado'))
-    usuario = db.relationship('Usuario', backref='emprestimos')
-    livro = db.relationship('Livro', backref='emprestimos')
 
 
-@app.route('/')
+
+@app.route("/")
 def index():
-    return render_template('index.html')
+    return render_template("index.html")
 
 
 
-@app.route('/autores')
+
+
+@app.route("/autores")
 def listar_autores():
-    autores = Autor.query.all()
-    return render_template('autores/listar_autores.html', autores=autores)
+    try:
+        autores = db.session.execute(text("SELECT * FROM Autores")).fetchall()
+        return render_template("autores/listar_autores.html", autores=autores)
+    except Exception as e:
+        flash(f"Erro ao listar autores: {e}", "danger")
+        return redirect(url_for("index"))
 
 
-@app.route('/autores/novo', methods=['GET', 'POST'])
+@app.route("/autor/novo", methods=["GET", "POST"])
 def novo_autor():
-    if request.method == 'POST':
-        nome = request.form['nome']
-        nacionalidade = request.form.get('nacionalidade')
-        data_nascimento = request.form.get('data_nascimento')
-        biografia = request.form.get('biografia')
+    if request.method == "POST":
+        try:
+            sql = text("""
+                INSERT INTO Autores (Nome_autor, Nacionalidade, Data_nascimento, Biografia)
+                VALUES (:nome, :nac, :nasc, :bio)
+            """)
+            db.session.execute(sql, {
+                "nome": request.form.get("nome"),
+                "nac": request.form.get("nacionalidade"),
+                "nasc": request.form.get("data_nascimento"),
+                "bio": request.form.get("biografia")
+            })
+            db.session.commit()
+            flash("Autor cadastrado com sucesso!", "success")
+            return redirect(url_for("listar_autores"))
 
-        novo_autor = Autor(
-            Nome_autor=nome,
-            Nacionalidade=nacionalidade,
-            Data_nascimento=data_nascimento,
-            Biografia=biografia
-        )
-        db.session.add(novo_autor)
-        db.session.commit()
-        return redirect(url_for('listar_autores'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f"Erro ao cadastrar autor: {e}", "danger")
 
-    return render_template('autores/novo_autor.html')
+    return render_template("autores/novo_autor.html")
 
 
-@app.route('/autores/editar/<int:id>', methods=['GET', 'POST'])
+@app.route("/autor/editar/<int:id>", methods=["GET", "POST"])
 def editar_autor(id):
-    autor = Autor.query.get_or_404(id)
+    if request.method == "POST":
+        try:
+            sql = text("""
+                UPDATE Autores SET 
+                Nome_autor=:nome, Nacionalidade=:nac, Data_nascimento=:nasc, Biografia=:bio
+                WHERE ID_autor=:id
+            """)
+            db.session.execute(sql, {
+                "nome": request.form.get("nome"),
+                "nac": request.form.get("nacionalidade"),
+                "nasc": request.form.get("data_nascimento"),
+                "bio": request.form.get("biografia"),
+                "id": id
+            })
+            db.session.commit()
+            flash("Autor editado com sucesso!", "success")
+            return redirect(url_for("listar_autores"))
 
-    if request.method == 'POST':
-        autor.Nome_autor = request.form['nome']
-        autor.Nacionalidade = request.form.get('nacionalidade')
-        autor.Data_nascimento = request.form.get('data_nascimento')
-        autor.Biografia = request.form.get('biografia')
+        except Exception as e:
+            db.session.rollback()
+            flash(f"Erro ao editar autor: {e}", "danger")
 
-        db.session.commit()
-        return redirect(url_for('listar_autores'))
+    autor = db.session.execute(
+        text("SELECT * FROM Autores WHERE ID_autor=:id"), {"id": id}
+    ).fetchone()
 
-    return render_template('autores/editar_autor.html', autor=autor)
+    return render_template("autores/editar_autor.html", autor=autor)
 
-@app.route('/autores/excluir/<int:id>', methods=['POST'])
+
+@app.route("/autor/excluir/<int:id>", methods=["GET", "POST"])
 def excluir_autor(id):
-    autor = Autor.query.get_or_404(id)
-    db.session.delete(autor)
-    db.session.commit()
-    return redirect(url_for('listar_autores'))
+    try:
+        db.session.execute(text("DELETE FROM Autores WHERE ID_autor=:id"), {"id": id})
+        db.session.commit()
+        flash("Autor excluído!", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Erro ao excluir: {e}", "danger")
+
+    return redirect(url_for("listar_autores"))
 
 
 
-@app.route('/editoras')
+
+
+@app.route("/editoras")
 def listar_editoras():
-    editoras = Editora.query.all()
-    return render_template('editoras/listar_editoras.html', editoras=editoras)
+    editoras = db.session.execute(text("SELECT * FROM Editoras")).fetchall()
+    return render_template("editoras/listar_editoras.html", editoras=editoras)
 
 
-@app.route('/editoras/nova', methods=['GET', 'POST'])
+@app.route("/editora/nova", methods=["GET", "POST"])
 def nova_editora():
-    if request.method == 'POST':
-        nome = request.form['nome']
-        endereco = request.form.get('endereco')
+    if request.method == "POST":
+        try:
+            db.session.execute(
+                text("INSERT INTO Editoras (Nome_editora) VALUES (:n)"),
+                {"n": request.form.get("nome")}
+            )
+            db.session.commit()
+            flash("Editora cadastrada!", "success")
+            return redirect(url_for("listar_editoras"))
+        except Exception as e:
+            db.session.rollback()
+            flash(f"Erro: {e}", "danger")
 
-        nova_editora = Editora(
-            Nome_editora=nome,
-            Endereco_editora=endereco
-        )
-        db.session.add(nova_editora)
-        db.session.commit()
-        return redirect(url_for('listar_editoras'))
-
-    return render_template('editoras/nova_editora.html')
+    return render_template("editoras/nova_editora.html")
 
 
-@app.route('/editoras/editar/<int:id>', methods=['GET', 'POST'])
+@app.route("/editora/editar/<int:id>", methods=["GET", "POST"])
 def editar_editora(id):
-    editora = Editora.query.get_or_404(id)
+    if request.method == "POST":
+        try:
+            db.session.execute(
+                text("UPDATE Editoras SET Nome_editora=:n WHERE ID_editora=:id"),
+                {"n": request.form.get("nome"), "id": id}
+            )
+            db.session.commit()
+            flash("Editora editada!", "success")
+            return redirect(url_for("listar_editoras"))
+        except Exception as e:
+            flash(f"Erro: {e}", "danger")
 
-    if request.method == 'POST':
-        editora.Nome_editora = request.form['nome']
-        editora.Endereco_editora = request.form.get('endereco')
+    editora = db.session.execute(
+        text("SELECT * FROM Editoras WHERE ID_editora=:id"), {"id": id}
+    ).fetchone()
 
-        db.session.commit()
-        return redirect(url_for('listar_editoras'))
-
-    return render_template('editoras/editar_editora.html', editora=editora)
+    return render_template("editoras/editar_editora.html", editora=editora)
 
 
-@app.route('/editoras/excluir/<int:id>', methods=['POST'])
+@app.route("/editora/excluir/<int:id>", methods=["GET", "POST"])
 def excluir_editora(id):
-    editora = Editora.query.get_or_404(id)
-    db.session.delete(editora)
-    db.session.commit()
-    return redirect(url_for('listar_editoras'))
+    try:
+        db.session.execute(text("DELETE FROM Editoras WHERE ID_editora=:id"), {"id": id})
+        db.session.commit()
+        flash("Editora excluída!", "success")
+    except Exception as e:
+        flash(f"Erro ao excluir: {e}", "danger")
+
+    return redirect(url_for("listar_editoras"))
 
 
 
-@app.route('/emprestimos')
+
+
+@app.route("/generos")
+def listar_generos():
+    generos = db.session.execute(text("SELECT * FROM Generos")).fetchall()
+    return render_template("generos/listar_generos.html", generos=generos)
+
+
+@app.route("/genero/novo", methods=["GET", "POST"])
+def novo_genero():
+    if request.method == "POST":
+        try:
+            db.session.execute(
+                text("INSERT INTO Generos (Nome_genero) VALUES (:n)"),
+                {"n": request.form.get("nome")}
+            )
+            db.session.commit()
+            flash("Gênero cadastrado!", "success")
+            return redirect(url_for("listar_generos"))
+        except Exception as e:
+            db.session.rollback()
+            flash(f"Erro: {e}", "danger")
+
+    return render_template("generos/novo_genero.html")
+
+
+@app.route("/genero/editar/<int:id>", methods=["GET", "POST"])
+def editar_genero(id):
+    if request.method == "POST":
+        try:
+            db.session.execute(
+                text("UPDATE Generos SET Nome_genero=:n WHERE ID_genero=:id"),
+                {"n": request.form.get("nome"), "id": id}
+            )
+            db.session.commit()
+            flash("Gênero editado!", "success")
+            return redirect(url_for("listar_generos"))
+        except Exception as e:
+            flash(f"Erro: {e}", "danger")
+
+    genero = db.session.execute(
+        text("SELECT * FROM Generos WHERE ID_genero=:id"), {"id": id}
+    ).fetchone()
+
+    return render_template("generos/editar_genero.html", genero=genero)
+
+
+@app.route("/genero/excluir/<int:id>", methods=["GET", "POST"])
+def excluir_genero(id):
+    try:
+        db.session.execute(text("DELETE FROM Generos WHERE ID_genero=:id"), {"id": id})
+        db.session.commit()
+        flash("Gênero excluído!", "success")
+    except Exception as e:
+        flash(f"Erro ao excluir: {e}", "danger")
+
+    return redirect(url_for("listar_generos"))
+
+
+
+
+@app.route("/usuarios")
+def listar_usuarios():
+    usuarios = db.session.execute(text("SELECT * FROM Usuarios")).fetchall()
+    return render_template("usuarios/listar_usuarios.html", usuarios=usuarios)
+
+
+@app.route("/usuario/novo", methods=["GET", "POST"])
+def novo_usuario():
+    if request.method == "POST":
+        try:
+            sql = text("""
+                INSERT INTO Usuarios (Nome_usuario, Email, Numero_telefone)
+                VALUES (:n, :e, :t)
+            """)
+            db.session.execute(sql, {
+                "n": request.form.get("nome"),
+                "e": request.form.get("email"),
+                "t": request.form.get("telefone")
+            })
+            db.session.commit()
+            flash("Usuário cadastrado!", "success")
+            return redirect(url_for("listar_usuarios"))
+
+        except Exception as e:
+            flash(f"Erro: {e}", "danger")
+
+    return render_template("usuarios/novo_usuario.html")
+
+
+@app.route("/usuario/editar/<int:id>", methods=["GET", "POST"])
+def editar_usuario(id):
+    if request.method == "POST":
+        try:
+            sql = text("""
+                UPDATE Usuarios SET
+                Nome_usuario=:n, Email=:e, Numero_telefone=:t
+                WHERE ID_usuario=:id
+            """)
+            db.session.execute(sql, {
+                "n": request.form.get("nome"),
+                "e": request.form.get("email"),
+                "t": request.form.get("telefone"),
+                "id": id
+            })
+            db.session.commit()
+            flash("Usuário editado!", "success")
+            return redirect(url_for("listar_usuarios"))
+
+        except Exception as e:
+            flash(f"Erro: {e}", "danger")
+
+    usuario = db.session.execute(
+        text("SELECT * FROM Usuarios WHERE ID_usuario=:id"), {"id": id}
+    ).fetchone()
+
+    return render_template("usuarios/editar_usuario.html", usuario=usuario)
+
+
+@app.route("/usuario/excluir/<int:id>", methods=["GET", "POST"])
+def excluir_usuario(id):
+    try:
+        db.session.execute(text("DELETE FROM Usuarios WHERE ID_usuario=:id"), {"id": id})
+        db.session.commit()
+        flash("Usuário excluído!", "success")
+    except Exception as e:
+        flash(f"Erro: {e}", "danger")
+
+    return redirect(url_for("listar_usuarios"))
+
+
+
+
+
+@app.route("/emprestimos")
 def listar_emprestimos():
-    emprestimos = Emprestimo.query.all()
-    return render_template('emprestimos/listar_emprestimos.html', emprestimos=emprestimos)
+    sql = text("""
+        SELECT E.*, 
+            U.Nome_usuario AS usuario_nome, 
+            L.Titulo AS livro_titulo
+        FROM Emprestimos E
+        LEFT JOIN Usuarios U ON E.Usuario_id = U.ID_usuario
+        LEFT JOIN Livros L ON E.Livro_id = L.ID_livro
+    """)
+    emprestimos = db.session.execute(sql).fetchall()
+    return render_template("emprestimos/listar_emprestimos.html", emprestimos=emprestimos)
 
 
-@app.route('/emprestimos/novo', methods=['GET', 'POST'])
+@app.route("/emprestimo/novo", methods=["GET", "POST"])
 def novo_emprestimo():
-    usuarios = Usuario.query.all()
-    livros = Livro.query.all()
+    if request.method == "POST":
+        try:
+            sql = text("""
+                INSERT INTO Emprestimos (Usuario_id, Livro_id, Data_emprestimo, Data_devolucao_prevista)
+                VALUES (:u, :l, :de, :dd)
+            """)
+            db.session.execute(sql, {
+                "u": request.form.get("usuario_id"),
+                "l": request.form.get("livro_id"),
+                "de": request.form.get("data_emprestimo"),
+                "dd": request.form.get("data_prevista")
+            })
+            db.session.commit()
+            flash("Emprestimo cadastrado!", "success")
+            return redirect(url_for("listar_emprestimos"))
 
-    if request.method == 'POST':
-        usuario_id = request.form['usuario_id']
-        livro_id = request.form['livro_id']
-        data_emprestimo = request.form.get('data_emprestimo')
-        data_devolucao_prevista = request.form.get('data_devolucao_prevista')
-        data_devolucao_real = request.form.get('data_devolucao_real')
-        status = request.form.get('status')
+        except Exception as e:
+            flash(f"Erro: {e}", "danger")
 
-        novo = Emprestimo(
-            Usuario_id=usuario_id,
-            Livro_id=livro_id,
-            Data_emprestimo=data_emprestimo,
-            Data_devolucao_prevista=data_devolucao_prevista,
-            Data_devolucao_real=data_devolucao_real,
-            Status_emprestimo=status
-        )
-        db.session.add(novo)
-        db.session.commit()
-        return redirect(url_for('listar_emprestimos'))
+    usuarios = db.session.execute(text("SELECT * FROM Usuarios")).fetchall()
+    livros = db.session.execute(text("SELECT * FROM Livros")).fetchall()
 
-    return render_template('emprestimos/novo_emprestimo.html', usuarios=usuarios, livros=livros)
+    return render_template("emprestimos/novo_emprestimo.html",
+                           usuarios=usuarios, livros=livros)
 
 
-@app.route('/emprestimos/editar/<int:id>', methods=['GET', 'POST'])
+@app.route("/emprestimo/editar/<int:id>", methods=["GET", "POST"])
 def editar_emprestimo(id):
-    emprestimo = Emprestimo.query.get_or_404(id)
-    usuarios = Usuario.query.all()
-    livros = Livro.query.all()
+    if request.method == "POST":
+        try:
+            sql = text("""
+                UPDATE Emprestimos SET
+                Usuario_id=:u, Livro_id=:l, Data_emprestimo=:de, 
+                Data_devolucao_prevista=:ddp, Data_devolucao_real=:ddr,
+                Status_emprestimo=:s
+                WHERE ID_emprestimo=:id
+            """)
+            db.session.execute(sql, {
+                "u": request.form.get("usuario_id"),
+                "l": request.form.get("livro_id"),
+                "de": request.form.get("data_emprestimo"),
+                "ddp": request.form.get("data_prevista"),
+                "ddr": request.form.get("data_real"),
+                "s": request.form.get("status"),
+                "id": id
+            })
+            db.session.commit()
+            flash("Emprestimo editado!", "success")
+            return redirect(url_for("listar_emprestimos"))
 
-    if request.method == 'POST':
-        emprestimo.Usuario_id = request.form['usuario_id']
-        emprestimo.Livro_id = request.form['livro_id']
-        emprestimo.Data_emprestimo = request.form.get('data_emprestimo')
-        emprestimo.Data_devolucao_prevista = request.form.get('data_devolucao_prevista')
-        emprestimo.Data_devolucao_real = request.form.get('data_devolucao_real')
-        emprestimo.Status_emprestimo = request.form.get('status')
+        except Exception as e:
+            flash(f"Erro: {e}", "danger")
 
-        db.session.commit()
-        return redirect(url_for('listar_emprestimos'))
+    emprestimo = db.session.execute(
+        text("SELECT * FROM Emprestimos WHERE ID_emprestimo=:id"), {"id": id}
+    ).fetchone()
 
-    return render_template('emprestimos/editar_emprestimo.html',
+    usuarios = db.session.execute(text("SELECT * FROM Usuarios")).fetchall()
+    livros = db.session.execute(text("SELECT * FROM Livros")).fetchall()
+
+    return render_template("emprestimos/editar_emprestimo.html",
                            emprestimo=emprestimo, usuarios=usuarios, livros=livros)
 
 
-@app.route('/emprestimos/excluir/<int:id>', methods=['POST'])
+@app.route("/emprestimo/excluir/<int:id>", methods=["GET", "POST"])
 def excluir_emprestimo(id):
-    emprestimo = Emprestimo.query.get_or_404(id)
-    db.session.delete(emprestimo)
-    db.session.commit()
-    return redirect(url_for('listar_emprestimos'))
-
-
-@app.route('/generos')
-def listar_generos():
-    generos = Genero.query.all()
-    return render_template('generos/listar_generos.html', generos=generos)
-
-
-@app.route('/generos/novo', methods=['GET', 'POST'])
-def novo_genero():
-    if request.method == 'POST':
-        nome = request.form['nome']
-
-        novo = Genero(Nome_genero=nome)
-        db.session.add(novo)
+    try:
+        db.session.execute(text("DELETE FROM Emprestimos WHERE ID_emprestimo=:id"), {"id": id})
         db.session.commit()
-        return redirect(url_for('listar_generos'))
+        flash("Empréstimo excluído!", "success")
+    except Exception as e:
+        flash(f"Erro: {e}", "danger")
 
-    return render_template('generos/novo_genero.html')
-
-
-@app.route('/generos/editar/<int:id>', methods=['GET', 'POST'])
-def editar_genero(id):
-    genero = Genero.query.get_or_404(id)
-
-    if request.method == 'POST':
-        genero.Nome_genero = request.form['nome']
-        db.session.commit()
-        return redirect(url_for('listar_generos'))
-
-    return render_template('generos/editar_genero.html', genero=genero)
+    return redirect(url_for("listar_emprestimos"))
 
 
-@app.route('/generos/excluir/<int:id>', methods=['POST'])
-def excluir_genero(id):
-    genero = Genero.query.get_or_404(id)
-    db.session.delete(genero)
-    db.session.commit()
-    return redirect(url_for('listar_generos'))
 
-
-@app.route('/livros')
+@app.route("/livros")
 def listar_livros():
-    livros = Livro.query.all()
-    return render_template('livros/listar_livros.html', livros=livros)
+    sql = text("""
+        SELECT L.*, 
+               A.Nome_autor AS autor_nome,
+               G.Nome_genero AS genero_nome,
+               E.Nome_editora AS editora_nome
+        FROM Livros L
+        LEFT JOIN Autores A ON L.Autor_id = A.ID_autor
+        LEFT JOIN Generos G ON L.Genero_id = G.ID_genero
+        LEFT JOIN Editoras E ON L.Editora_id = E.ID_editora
+    """)
+    livros = db.session.execute(sql).fetchall()
+    return render_template("livros/listar_livros.html", livros=livros)
 
 
-@app.route('/livros/novo', methods=['GET', 'POST'])
+@app.route("/livro/novo", methods=["GET", "POST"])
 def novo_livro():
-    autores = Autor.query.all()
-    generos = Genero.query.all()
-    editoras = Editora.query.all()
+    if request.method == "POST":
+        try:
+            sql = text("""
+                INSERT INTO Livros 
+                (Titulo, Autor_id, ISBN, Ano_publicacao, Genero_id, Editora_id, Quantidade_disponivel, Resumo)
+                VALUES (:t, :a, :i, :ano, :g, :e, :q, :r)
+            """)
 
-    if request.method == 'POST':
-        titulo = request.form['titulo']
-        autor_id = request.form.get('autor_id')
-        isbn = request.form.get('isbn')
-        ano_publicacao = request.form.get('ano_publicacao')
-        genero_id = request.form.get('genero_id')
-        editora_id = request.form.get('editora_id')
-        quantidade = request.form.get('quantidade')
-        resumo = request.form.get('resumo')
+            db.session.execute(sql, {
+                "t": request.form.get("titulo"),
+                "a": request.form.get("autor_id"),
+                "i": request.form.get("isbn"),
+                "ano": request.form.get("ano"),
+                "g": request.form.get("genero_id"),
+                "e": request.form.get("editora_id"),
+                "q": request.form.get("quantidade"),
+                "r": request.form.get("resumo")
+            })
+            db.session.commit()
+            flash("Livro cadastrado!", "success")
+            return redirect(url_for("listar_livros"))
 
-        novo = Livro(
-            Titulo=titulo,
-            Autor_id=autor_id,
-            ISBN=isbn,
-            Ano_publicacao=ano_publicacao,
-            Genero_id=genero_id,
-            Editora_id=editora_id,
-            Quantidade_disponivel=quantidade,
-            Resumo=resumo
-        )
-        db.session.add(novo)
-        db.session.commit()
-        return redirect(url_for('listar_livros'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f"Erro ao cadastrar: {e}", "danger")
 
-    return render_template('livros/novo_livro.html', autores=autores, generos=generos, editoras=editoras)
+    autores = db.session.execute(text("SELECT * FROM Autores")).fetchall()
+    generos = db.session.execute(text("SELECT * FROM Generos")).fetchall()
+    editoras = db.session.execute(text("SELECT * FROM Editoras")).fetchall()
+
+    return render_template("livros/novo_livro.html",
+                           autores=autores,
+                           generos=generos,
+                           editoras=editoras)
 
 
-@app.route('/livros/editar/<int:id>', methods=['GET', 'POST'])
+@app.route("/livro/editar/<int:id>", methods=["GET", "POST"])
 def editar_livro(id):
-    livro = Livro.query.get_or_404(id)
-    autores = Autor.query.all()
-    generos = Genero.query.all()
-    editoras = Editora.query.all()
+    if request.method == "POST":
+        try:
+            sql = text("""
+                UPDATE Livros SET
+                    Titulo=:t,
+                    Autor_id=:a,
+                    ISBN=:i,
+                    Ano_publicacao=:ano,
+                    Genero_id=:g,
+                    Editora_id=:e,
+                    Quantidade_disponivel=:q,
+                    Resumo=:r
+                WHERE ID_livro=:id
+            """)
 
-    if request.method == 'POST':
-        livro.Titulo = request.form['titulo']
-        livro.Autor_id = request.form.get('autor_id')
-        livro.ISBN = request.form.get('isbn')
-        livro.Ano_publicacao = request.form.get('ano_publicacao')
-        livro.Genero_id = request.form.get('genero_id')
-        livro.Editora_id = request.form.get('editora_id')
-        livro.Quantidade_disponivel = request.form.get('quantidade')
-        livro.Resumo = request.form.get('resumo')
+            db.session.execute(sql, {
+                "t": request.form.get("titulo"),
+                "a": request.form.get("autor_id"),
+                "i": request.form.get("isbn"),
+                "ano": request.form.get("ano"),
+                "g": request.form.get("genero_id"),
+                "e": request.form.get("editora_id"),
+                "q": request.form.get("quantidade"),
+                "r": request.form.get("resumo"),
+                "id": id
+            })
 
-        db.session.commit()
-        return redirect(url_for('listar_livros'))
+            db.session.commit()
+            flash("Livro editado!", "success")
+            return redirect(url_for("listar_livros"))
 
-    return render_template('livros/editar_livro.html', livro=livro, autores=autores, generos=generos, editoras=editoras)
+        except Exception as e:
+            flash(f"Erro ao editar: {e}", "danger")
+
+    livro = db.session.execute(
+        text("SELECT * FROM Livros WHERE ID_livro=:id"), {"id": id}
+    ).fetchone()
+
+    autores = db.session.execute(text("SELECT * FROM Autores")).fetchall()
+    generos = db.session.execute(text("SELECT * FROM Generos")).fetchall()
+    editoras = db.session.execute(text("SELECT * FROM Editoras")).fetchall()
+
+    return render_template("livros/editar_livro.html",
+                           livro=livro,
+                           autores=autores,
+                           generos=generos,
+                           editoras=editoras)
 
 
-@app.route('/livros/excluir/<int:id>', methods=['POST'])
+@app.route("/livro/excluir/<int:id>", methods=["GET", "POST"])
 def excluir_livro(id):
-    livro = Livro.query.get_or_404(id)
-    db.session.delete(livro)
-    db.session.commit()
-    return redirect(url_for('listar_livros'))
-
-
-
-@app.route('/usuarios')
-def listar_usuarios():
-    usuarios = Usuario.query.all()
-    return render_template('usuarios/listar_usuarios.html', usuarios=usuarios)
-
-
-@app.route('/usuarios/novo', methods=['GET', 'POST'])
-def novo_usuario():
-    if request.method == 'POST':
-        nome = request.form['nome']
-        email = request.form.get('email')
-        telefone = request.form.get('telefone')
-        multa = request.form.get('multa')
-
-        novo = Usuario(
-            Nome_usuario=nome,
-            Email=email,
-            Numero_telefone=telefone,
-            Multa_atual=multa or 0
-        )
-        db.session.add(novo)
+    try:
+        db.session.execute(text("DELETE FROM Livros WHERE ID_livro=:id"), {"id": id})
         db.session.commit()
-        return redirect(url_for('listar_usuarios'))
+        flash("Livro excluído!", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Erro ao excluir livro: {e}", "danger")
 
-    return render_template('usuarios/novo_usuario.html')
-
-
-@app.route('/usuarios/editar/<int:id>', methods=['GET', 'POST'])
-def editar_usuario(id):
-    usuario = Usuario.query.get_or_404(id)
-
-    if request.method == 'POST':
-        usuario.Nome_usuario = request.form['nome']
-        usuario.Email = request.form.get('email')
-        usuario.Numero_telefone = request.form.get('telefone')
-        usuario.Multa_atual = request.form.get('multa') or 0
-
-        db.session.commit()
-        return redirect(url_for('listar_usuarios'))
-
-    return render_template('usuarios/editar_usuario.html', usuario=usuario)
+    return redirect(url_for("listar_livros"))
 
 
-@app.route('/usuarios/excluir/<int:id>', methods=['POST'])
-def excluir_usuario(id):
-    usuario = Usuario.query.get_or_404(id)
-    db.session.delete(usuario)
-    db.session.commit()
-    return redirect(url_for('listar_usuarios'))
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run(debug=True)

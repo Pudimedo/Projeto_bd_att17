@@ -19,19 +19,19 @@
       <th>Devolução Real</th>
       <th>Status</th>
       <th>Ações</th>
-      
     </tr>
-
   </thead>
+
   <tbody>
     {% for emprestimo in emprestimos %}
     <tr>
       <td>{{ emprestimo.ID_emprestimo }}</td>
-      <td>{{ emprestimo.usuario.Nome_usuario }}</td>
-      <td>{{ emprestimo.livro.Titulo }}</td>
+      <td>{{ emprestimo.usuario_nome }}</td>
+      <td>{{ emprestimo.livro_titulo }}</td>
       <td>{{ emprestimo.Data_emprestimo }}</td>
       <td>{{ emprestimo.Data_devolucao_prevista }}</td>
       <td>{{ emprestimo.Data_devolucao_real or '-' }}</td>
+
       <td>
         {% if emprestimo.Status_emprestimo == 'devolvido' %}
           <span class="badge bg-success">Devolvido</span>
@@ -41,23 +41,23 @@
           <span class="badge bg-warning text-dark">Pendente</span>
         {% endif %}
       </td>
+
       <td class="text-center">
-  <a href="{{ url_for('editar_emprestimo', id=emprestimo.ID_emprestimo) }}" class="btn btn-sm btn-warning">Editar</a>
-
-  <form action="{{ url_for('excluir_emprestimo', id=emprestimo.ID_emprestimo) }}" method="post" class="d-inline">
-    <button type="submit" class="btn btn-sm btn-danger"
-            onclick="return confirm('Tem certeza que deseja excluir este empréstimo?')">
-      Excluir
-    </button>
-  </form>
-</td>
-
-      <td>
-        <a href="{{ url_for('editar_emprestimo', id=emprestimo.ID_emprestimo) }}" class="btn btn-sm btn-warning">
+        <a href="{{ url_for('editar_emprestimo', id=emprestimo.ID_emprestimo) }}"
+           class="btn btn-sm btn-warning">
           Editar
         </a>
+
+        <form action="{{ url_for('excluir_emprestimo', id=emprestimo.ID_emprestimo) }}"
+              method="post" class="d-inline">
+          <button type="submit" class="btn btn-sm btn-danger"
+                  onclick="return confirm('Tem certeza que deseja excluir este empréstimo?')">
+            Excluir
+          </button>
+        </form>
       </td>
     </tr>
+
     {% else %}
     <tr>
       <td colspan="8" class="text-center text-muted">Nenhum empréstimo cadastrado.</td>
