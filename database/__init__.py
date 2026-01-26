@@ -1,20 +1,18 @@
+# Por algum motivo não consigo rodar o schema.sql :(
 import mysql.connector
 
 def initDatabase():
-    # Conecta ao MySQL
     connection = mysql.connector.connect(
         host="localhost",
         user="root",
-        password=""  # coloque a senha se tiver
+        password=""
     )
     
     cursor = connection.cursor()
 
-    # Cria banco de dados
     cursor.execute("CREATE DATABASE IF NOT EXISTS db_atividade17;")
     cursor.execute("USE db_atividade17;")
 
-    # Criação de tabelas
     tabelas_sql = [
         """
         CREATE TABLE IF NOT EXISTS Autores (
@@ -91,9 +89,7 @@ def initDatabase():
     for sql in tabelas_sql:
         cursor.execute(sql)
 
-    # Criação de triggers (compatível com mysql.connector)
     triggers_sql = [
-        # Trigger para baixar estoque após empréstimo
         """
         CREATE TRIGGER IF NOT EXISTS trg_baixar_estoque_livro
         AFTER INSERT ON Emprestimos
@@ -102,7 +98,6 @@ def initDatabase():
         SET Quantidade_disponivel = Quantidade_disponivel - 1
         WHERE ID_livro = NEW.Livro_id
         """,
-        # Trigger para preencher data_inscricao e multa padrão
         """
         CREATE TRIGGER IF NOT EXISTS trg_preencher_usuario
         BEFORE INSERT ON Usuarios
@@ -110,7 +105,6 @@ def initDatabase():
         SET NEW.Data_inscricao = IFNULL(NEW.Data_inscricao, CURDATE()),
             NEW.Multa_atual = IFNULL(NEW.Multa_atual, 0.00)
         """,
-        # Trigger para log de novo empréstimo
         """
         CREATE TRIGGER IF NOT EXISTS trg_log_novo_emprestimo
         AFTER INSERT ON Emprestimos
@@ -122,7 +116,6 @@ def initDatabase():
             CONCAT('Empréstimo criado | Usuário ID: ', NEW.Usuario_id, ' | Livro ID: ', NEW.Livro_id)
         )
         """,
-        # Trigger para status atrasado
         """
         CREATE TRIGGER IF NOT EXISTS trg_status_atrasado
         BEFORE UPDATE ON Emprestimos
